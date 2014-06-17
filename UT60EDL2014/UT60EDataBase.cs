@@ -12,6 +12,37 @@ namespace UT60EDL2014
         public int scale { get; set; }
         public int value { get; set; }
         public abstract string getUnit();
+        public override string ToString()
+        {
+            int scale = this.scale;
+            int unit = 0;
+            while (scale > 3)
+            {
+                unit += 1;
+                scale -= 3;
+            }
+            while (scale <= 0)
+            {
+                unit -= 1;
+                scale += 3;
+            }
+            Decimal actualValue = new Decimal(this.value * Math.Pow(10, -scale));
+            StringBuilder temp = new StringBuilder();
+            StringBuilder fmt = new StringBuilder();
+            for (int i = 0; i < (4 - scale); ++i)
+                fmt.Append("0");
+            if (scale > 0)
+            {
+                fmt.Append(".");
+                for (int i = 0; i < scale; ++i)
+                    fmt.Append("0");
+            }
+            temp.Append(actualValue.ToString(fmt.ToString()));
+            if (Enum.IsDefined(typeof(Modifier), unit))
+                temp.Append(((Modifier)unit).ToString());
+            temp.Append(getUnit());
+            return temp.ToString();
+        }
     }
 
     abstract class UT60EDataMUnits : UT60EDataBase

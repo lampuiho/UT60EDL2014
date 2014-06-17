@@ -14,6 +14,7 @@ namespace UT60EDL2014
     {
         UT60EPortDataPacker data_handler;
         System.IO.Ports.SerialPort sp;
+        DataTable dt;
         public UT60EDisplayForm()
         {
             InitializeComponent();
@@ -23,6 +24,12 @@ namespace UT60EDL2014
             sp.ReceivedBytesThreshold = 2;
             sp.Open();
             this.sp.DataReceived += OnDataReceive;
+            dt = new DataTable("UT60EData");
+            dt.Columns.Add("Time", typeof(DateTime));
+            dt.Columns.Add("Value", typeof(Decimal));
+            dt.Columns.Add("Unit", typeof(String));
+            this.dataGridView1.DataSource = dt;
+            this.dataGridView1.Columns[0].DefaultCellStyle.Format = "yyyy'/'MM'/'dd HH:mm:ss:ffff";
         }
 
         private void UT60EDisplayForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -44,34 +51,11 @@ namespace UT60EDL2014
         private void UpdateDisplay(object sender, EventArgs e)
         {
             UT60EDataBase data = (UT60EDataBase)sender;
-            int scale = data.scale;
-            int unit = 0;
-            while (scale > 3)
+            this.BeginInvoke((Action)(() =>
             {
-                unit += 1;
-                scale -= 3;
-            }
-            while (scale <= 0)
-            {
-                unit -= 1;
-                scale += 3;
-            }
-            Decimal actualValue = new Decimal(data.value * Math.Pow(10, -scale));
-            StringBuilder temp = new StringBuilder();
-            StringBuilder fmt = new StringBuilder();
-            for (int i = 0; i < (4 - scale); ++i)
-                fmt.Append("0");
-            if (scale > 0)
-            {
-                fmt.Append(".");
-                for (int i = 0; i < scale; ++i)
-                    fmt.Append("0");
-            }
-            temp.Append(actualValue.ToString(fmt.ToString()));
-            if (Enum.IsDefined(typeof(Modifier), unit))
-                temp.Append(((Modifier)unit).ToString());
-            temp.Append(data.getUnit());
-            this.BeginInvoke((Action)(() => { textBoxValue.Text = temp.ToString(); }));
+                textBoxValue.Text = data.ToString();
+                dt.Rows.Add(new Object[] { data.time, data.value * Math.Pow(10, -data.scale), data.getUnit() });
+            }));
         }
     }
 }

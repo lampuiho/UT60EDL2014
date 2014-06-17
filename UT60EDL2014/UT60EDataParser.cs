@@ -119,6 +119,8 @@ namespace UT60EDL2014
                 data.scale -= 3;
             else if ((package.data[(int)offset.NIB_B_OFFSET] & UT60EDefinition.NIB_B_MEGA) != 0)
                 data.scale -= 6;
+
+            data.time = package.time_stamp;
             return data;
         }
     }
