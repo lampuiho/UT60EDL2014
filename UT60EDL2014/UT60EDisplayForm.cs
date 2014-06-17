@@ -12,16 +12,15 @@ namespace UT60EDL2014
     enum Modifier { M = -2, k = -1, m = 1, u = 2, n = 3 };
     public partial class UT60EDisplayForm : Form
     {
-        UT60EDataParser parser = new UT60EDataParser();
+        UT60EPortDataPacker data_handler;
         System.IO.Ports.SerialPort sp;
-        bool synced;
         public UT60EDisplayForm()
         {
             InitializeComponent();
-            parser.dataReadyEventHandler += UpdateDisplay;
+            data_handler = new UT60EPortDataPacker(UpdateDisplay);
             this.sp = new System.IO.Ports.SerialPort("COM1", 2400, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.One);
             sp.DtrEnable = true;
-            sp.ReceivedBytesThreshold = 14;
+            sp.ReceivedBytesThreshold = 2;
             sp.Open();
             this.sp.DataReceived += OnDataReceive;
         }
@@ -34,9 +33,12 @@ namespace UT60EDL2014
         private void OnDataReceive(object sender, EventArgs e)
         {
             int size = sp.BytesToRead;
-            byte[] buf = new byte[size];
-            sp.Read(buf, 0, size);
-            parser.DataReceived(buf);
+            if (size > 0)
+            {
+                byte[] buf = new byte[size];
+                sp.Read(buf, 0, size);
+                data_handler.DataReceived(buf);
+            }
         }
 
         private void UpdateDisplay(object sender, EventArgs e)
@@ -49,14 +51,23 @@ namespace UT60EDL2014
                 unit += 1;
                 scale -= 3;
             }
-            while (scale < 3)
+            while (scale <= 0)
             {
                 unit -= 1;
                 scale += 3;
             }
             Decimal actualValue = new Decimal(data.value * Math.Pow(10, -scale));
             StringBuilder temp = new StringBuilder();
-            temp.Append(actualValue.ToString());
+            StringBuilder fmt = new StringBuilder();
+            for (int i = 0; i < (4 - scale); ++i)
+                fmt.Append("0");
+            if (scale > 0)
+            {
+                fmt.Append(".");
+                for (int i = 0; i < scale; ++i)
+                    fmt.Append("0");
+            }
+            temp.Append(actualValue.ToString(fmt.ToString()));
             if (Enum.IsDefined(typeof(Modifier), unit))
                 temp.Append(((Modifier)unit).ToString());
             temp.Append(data.getUnit());
