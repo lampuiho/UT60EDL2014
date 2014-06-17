@@ -23,9 +23,14 @@ namespace UT60EDL2014
         {
             System.IO.Ports.SerialPort sp = new System.IO.Ports.SerialPort("COM1", 2400, System.IO.Ports.Parity.None, 8, System.IO.Ports.StopBits.None);
             sp.DtrEnable = true;
+            sp.ReceivedBytesThreshold = 14;
             sp.Open();
         }
 
-
+        private void disconnectAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var sp in portList)
+                sp.Close();
+        }
     }
 }

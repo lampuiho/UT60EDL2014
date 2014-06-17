@@ -57,6 +57,7 @@
             this.disconnectAllToolStripMenuItem.Name = "disconnectAllToolStripMenuItem";
             this.disconnectAllToolStripMenuItem.Size = new System.Drawing.Size(85, 20);
             this.disconnectAllToolStripMenuItem.Text = "Disconnect All";
+            this.disconnectAllToolStripMenuItem.Click += new System.EventHandler(this.disconnectAllToolStripMenuItem_Click);
             // 
             // Form1
             // 
