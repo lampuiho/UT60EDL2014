@@ -21,18 +21,18 @@ namespace UT60EDL2014
     {
         Stack<byte> buffer = new Stack<byte>(14);
         DateTime current_package_time_stamp;
-        EventHandler dataReadyEventHandler;
-        UT60EDataParser parser;
+        public event EventHandler dataReadyEventHandler;
 
-        public UT60EPortDataPacker(EventHandler dataReadyEventHandler)
+        public UT60EPortDataPacker(params IUT60EDataHandler[] dataHandlers)
         {
-            this.dataReadyEventHandler += dataReadyEventHandler;
+            foreach (var handler in dataHandlers)
+                this.dataReadyEventHandler += handler.DataReady;
         }
 
         /// <summary>
         /// Process bytes read from port buffer.
         /// </summary>
-        /// <param name="buf"></param>
+        /// <param name="buf">Bytes received from ports.</param>
         public void DataReceived(byte[] buf)
         {
             lock (buffer)
@@ -96,8 +96,26 @@ namespace UT60EDL2014
                 package.data[i] = buffer.Pop();
             package.time_stamp = current_package_time_stamp;
             UT60EDataParser parser = new UT60EDataParser(package);
-            var data = parser.Parse();
-            dataReadyEventHandler.BeginInvoke(data, null, null, null);
+            UT60EDataBase data;
+            try
+            {
+                data = parser.Parse();
+            }
+            catch (Exception e)
+            {
+                /*
+                switch (e.GetType().ToString())
+                {
+                    default:
+                        break;
+                }*/
+                data = null;
+            }
+            var receivers = dataReadyEventHandler.GetInvocationList();
+            foreach (EventHandler receiver in receivers)
+            {
+                receiver.BeginInvoke(data, null, null, null);
+            }
         }
     }
 }

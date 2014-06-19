@@ -11,10 +11,8 @@ namespace UT60EDL2014
 {
     public partial class MDIParent1 : Form
     {
-        List<UT60EDisplayForm> displays = new List<UT60EDisplayForm>();
-
-        private int childFormNumber = 0;
-
+        List<Form> displays = new List<Form>();
+        
         public MDIParent1()
         {
             InitializeComponent();
@@ -22,10 +20,17 @@ namespace UT60EDL2014
 
         private void ShowNewForm(object sender, EventArgs e)
         {
-            Form childForm = new UT60EDisplayForm();
-            childForm.MdiParent = this;
-            childForm.Text = "Window " + childFormNumber++;
-            childForm.Show();
+            UT60EConfigForm config = new UT60EConfigForm();
+            var result = config.ShowDialog();
+            if (result == System.Windows.Forms.DialogResult.OK)
+            {
+                string selectedPortName = config.comboBoxAvaComPorts.SelectedItem.ToString();
+                Form childForm = new UT60EDisplayForm(selectedPortName, config.comboBoxUnits.SelectedItem.ToString(), config.comboBoxLimit.SelectedIndex, int.Parse(config.textBoxLimit.Text));
+                childForm.MdiParent = this;
+                childForm.Text = selectedPortName;
+                displays.Add(childForm);
+                childForm.Show();
+            }
         }
 
         private void OpenFile(object sender, EventArgs e)

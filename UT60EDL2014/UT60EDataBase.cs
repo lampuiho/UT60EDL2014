@@ -16,25 +16,25 @@ namespace UT60EDL2014
         {
             int scale = this.scale;
             int unit = 0;
-            while (scale > 3)
+            while (scale > 0)
             {
                 unit += 1;
                 scale -= 3;
             }
-            while (scale <= 0)
+            while (scale < -3)
             {
                 unit -= 1;
                 scale += 3;
             }
-            Decimal actualValue = new Decimal(this.value * Math.Pow(10, -scale));
+            Decimal actualValue = new Decimal(this.value * Math.Pow(10, scale));
             StringBuilder temp = new StringBuilder();
             StringBuilder fmt = new StringBuilder();
-            for (int i = 0; i < (4 - scale); ++i)
+            for (int i = 0; i < (4 + scale); ++i)
                 fmt.Append("0");
-            if (scale > 0)
+            if (scale != 0)
             {
                 fmt.Append(".");
-                for (int i = 0; i < scale; ++i)
+                for (int i = 0; i < Math.Abs(scale); ++i)
                     fmt.Append("0");
             }
             temp.Append(actualValue.ToString(fmt.ToString()));
@@ -61,9 +61,8 @@ namespace UT60EDL2014
 
     class UT60ETemperatrue : UT60EDataMUnits
     {
-        int unitSetting;
         readonly string[] Units = { "F", "C" };
-        protected virtual string[] units { get { return Units; } }
+        protected override string[] units { get { return Units; } }
         public UT60ETemperatrue(int unitSetting)
             : base(unitSetting)
         {

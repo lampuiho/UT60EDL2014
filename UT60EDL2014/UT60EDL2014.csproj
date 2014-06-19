@@ -45,12 +45,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CsvFile.cs" />
     <Compile Include="MDIParent1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MDIParent1.Designer.cs">
       <DependentUpon>MDIParent1.cs</DependentUpon>
     </Compile>
+    <Compile Include="UT60EConfigForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UT60EConfigForm.Designer.cs">
+      <DependentUpon>UT60EConfigForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UT60EDataLogger.cs" />
     <Compile Include="UT60EPortDataPackage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -75,6 +83,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="UT60EConfigForm.resx">
+      <DependentUpon>UT60EConfigForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UT60EDisplayForm.resx">
       <DependentUpon>UT60EDisplayForm.cs</DependentUpon>
     </EmbeddedResource>
