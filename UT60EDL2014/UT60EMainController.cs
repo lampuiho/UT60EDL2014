@@ -13,8 +13,7 @@ namespace UT60EDL2014
     public interface ILogControl
     {
         void SetupLogging(UT60ELogSettings log_settings);
-        bool IsNotLogging();
-        void StartLogging();
+        bool IsLogging();
         void StopLogging();
     }
     public class UT60EMainController : ILogControl, IDisposable
@@ -24,10 +23,10 @@ namespace UT60EDL2014
             int log_limit;
             EventHandler limit;
             public event EventHandler HitLogLimit;
-            internal LogLimiter(IUT60EDataSender logger, int limit_type, int log_limit)
+            internal LogLimiter(IUT60EDataSender logger, UT60ELogSettings log_settings)
             {
-                this.log_limit = log_limit;
-                switch (limit_type)
+                this.log_limit = log_settings.log_limit;
+                switch (log_settings.log_limit)
                 {
                     case 0:
                         this.limit = time_limit;
@@ -73,42 +72,50 @@ namespace UT60EDL2014
                 display.Connect(data_controller);
                 data_controllers.Add(data_controller);
             }
-            InitialiseLogging();
+
+            if (log_settings != null)
+            {
+                InitialiseLogging();
+            }
         }
         void InitialiseLogging()
         {
-            if (log_settings != null)
+            DateTime start_time = log_settings.start_time;
+            var span = (start_time - DateTime.Now);
+            if (span.CompareTo(TimeSpan.Zero) < 0)
             {
-                DateTime start_time = log_settings.start_time;
-                log_data_controller = new UT60ELogDataController(data_controllers, 0.26 * log_settings.log_freq_m);
-                var span = (start_time - DateTime.Now);
-                if (span.CompareTo(TimeSpan.Zero) < 0)
-                {
-                    span = TimeSpan.Zero;
-                }
-                System.Threading.Timer timer = new System.Threading.Timer(StartLogging, null, span, TimeSpan.FromMilliseconds(-1));
+                span = TimeSpan.Zero;
             }
+            System.Threading.Timer timer = new System.Threading.Timer(StartLogging, null, span, TimeSpan.FromMilliseconds(-1));
+            log_data_controller = new UT60ELogDataController(data_controllers, log_settings);
+            data_logger = new UT60EDataLogger(serial_port_settings, log_settings);
+            log_limiter = new LogLimiter(log_data_controller, log_settings);
         }
         public void SetupLogging(UT60ELogSettings log_settings)
         {
             this.log_settings = log_settings;
-            data_logger = new UT60EDataLogger(serial_port_settings, log_settings);
+            InitialiseLogging();
         }
-        public bool IsNotLogging()
+        public bool IsLogging()
         {
-            return data_logger == null;
+            return log_data_controller.IsLogging();
         }
-        public void StartLogging()
+        void StartLogging()
         {
-            data_logger.Connect(log_data_controller);
+            LoggingStarted(log_settings, null);
             log_limiter.HitLogLimit += this.OnHitLogLimit;
+            data_logger.Connect(log_data_controller);
         }
         public void StopLogging()
         {
             if (data_logger != null)
             {
+                LoggingStopped(null, null);
+                data_logger.Disconnect(log_data_controller);
                 data_logger.Dispose();
                 data_logger = null;
+                log_data_controller.Dispose();
+                log_data_controller = null;
             }
         }
         public void Dispose()
@@ -134,7 +141,7 @@ namespace UT60EDL2014
              */
         }
     }
-    class UT60ELogDataController : IUT60EDataSender
+    class UT60ELogDataController : IUT60EDataSender, IDisposable
     {
         public event EventHandler DataReady;
 
@@ -142,15 +149,20 @@ namespace UT60EDL2014
         double period;
         DateTime start_time, period_end;
         Dictionary<string, IUT60EData> data_keeper;
-        public UT60ELogDataController(List<UT60EDataController> data_controllers, double period)
+        public UT60ELogDataController(List<UT60EDataController> data_controllers, UT60ELogSettings log_settings)
         {
-            this.period = period;
+            this.period = 0.26 * log_settings.log_freq_m;
+            this.start_time = log_settings.start_time;
             data_keeper = new Dictionary<string, IUT60EData>(data_controllers.Count);
             foreach(var controller in data_controllers)
             {
                 controller.DataReady += this.OnDataReady;
                 data_keeper.Add(controller.id, null);
             }
+        }
+        public bool IsLogging()
+        {
+            return DataReady.GetInvocationList().Count() > 0;
         }
         void NewPeriod(IUT60EData data)
         {
@@ -192,6 +204,13 @@ namespace UT60EDL2014
                         packet_count = 0;
                     }
                 }
+            }
+        }
+        public void Dispose()
+        {
+            foreach (EventHandler e in DataReady.GetInvocationList())
+            {
+                DataReady -= e;
             }
         }
     }

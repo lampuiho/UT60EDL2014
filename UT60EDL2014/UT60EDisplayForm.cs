@@ -82,19 +82,17 @@ namespace UT60EDL2014
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            if (controller.IsNotLogging())
+            if (controller.IsLogging())
             {
-                /*UT60ELogConfigForm config = new UT60ELogConfigForm();
-                if (config.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
-                {
-                    int log_limit = (int)config.numericUpDownLimit.Value;
-                    int limit_type = config.comboBoxLimit.SelectedIndex;
-                    controller.InitialiseLogging(DateTime.Now, config.comboBoxUnits.SelectedItem.ToString(), limit_type, log_limit);
-                }*/
+                controller.StopLogging();
             }
             else
             {
-                controller.StopLogging();
+                UT60EConfigWizard config = new UT60EConfigWizard();
+                if (config.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    controller.SetupLogging(config.log_setting);
+                }
             }
         }
     }

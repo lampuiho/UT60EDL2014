@@ -22,7 +22,7 @@ namespace UT60EDL2014
             if (result == System.Windows.Forms.DialogResult.OK)
             {
                 UT60EDisplayForm childForm = new UT60EDisplayForm();
-                UT60EMainController controller = new UT60EMainController(childForm, config.port_settings, config.log_setting);
+                UT60EMainController controller = new UT60EMainController(childForm, config.port_settings, config.log ? config.log_setting : null);
                 childForm.Connect(controller);
                 childForm.MdiParent = this;
                 childForm.Show();
