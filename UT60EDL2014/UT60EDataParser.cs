@@ -9,36 +9,36 @@ namespace UT60EDL2014
     /// <summary>
     /// Functor to parse data from UT60E.
     /// </summary>
-    class UT60EDataParser
+    class UT60EDataParser : IParseable<IUT60EData>
     {
-        UT60EPortDataPackage package;
-        UT60EDataBase data;
-        public UT60EDataParser(UT60EPortDataPackage package)
-        {
-            this.package = package;
-        }
-
         enum offset { NIB_1_OFFSET, DIG1_OFFSET, DIG2_OFFSET = 3, DIG3_OFFSET = 5, DIG4_OFFSET = 7, NIB_A_OFFSET = 9, NIB_B_OFFSET, NIB_C_OFFSET, NIB_D_OFFSET, NIB_E_OFFSET };
-        static class UT60EDefinition {
+        static class UT60EDefinition
+        {
             public const byte NIB_E_UNKNOWN = 0xe;
             public const byte NIB_E_CELCIUS = 0x1;
-            public const byte NIB_D_HERTZ	= 0x2;
+            public const byte NIB_D_HERTZ = 0x2;
             public const byte NIB_D_VOLT = 0x4;
             public const byte NIB_D_AMP = 0x8;
             public const byte NIB_C_DELTA = 0x2;
             public const byte NIB_C_OHM = 0x4;
             public const byte NIB_C_FARAD = 0x8;
-            public const byte NIB_B_PERCENT	= 0x4;
+            public const byte NIB_B_PERCENT = 0x4;
             public const byte NIB_A_KILO = 0x2;
             public const byte NIB_A_NANO = 0x4;
             public const byte NIB_A_MICRO = 0x8;
             public const byte NIB_B_MEGA = 0x2;
             public const byte NIB_B_MILLI = 0x8;
         }
+        UT60EPacket package;
+        int value, scale;
+        public UT60EDataParser(UT60EPacket package)
+        {
+            this.package = package;
+        }
         byte ParseDigit(int d_offset)
         {
             byte result = 0;
-            byte fix = (byte)((package.data[d_offset] << 4) | (package.data[d_offset + 1] & 0xF));
+            byte fix = (byte)((package.Data[d_offset] << 4) | (package.Data[d_offset + 1] & 0xF));
             if ((fix & 0x80) != 0)
             {
                 fix &= 0x7F;
@@ -60,7 +60,6 @@ namespace UT60EDL2014
                 default: throw new FormatException();
             }
         }
-
         void ParseNumber()
         {
             bool negative = false;
@@ -73,15 +72,25 @@ namespace UT60EDL2014
                     if (i == 3)
                         negative = true;
                     else
-                        data.scale = -(i + 1);
+                        scale = -(i + 1);
                     digits[i] &= 0x7F; //rid of first bit
                 }
             }
-            data.value = ConvertDigitsToInteger(digits);
+            value = ConvertDigitsToInteger(digits);
             if (negative)
-                data.value = -Math.Abs(data.value);
-        }
+                value = -Math.Abs(value);
 
+            if ((package.Data[(int)offset.NIB_A_OFFSET] & UT60EDefinition.NIB_A_NANO) != 0)
+                scale -= 9;
+            else if ((package.Data[(int)offset.NIB_A_OFFSET] & UT60EDefinition.NIB_A_MICRO) != 0)
+                scale -= 6;
+            else if ((package.Data[(int)offset.NIB_B_OFFSET] & UT60EDefinition.NIB_B_MILLI) != 0)
+                scale -= 3;
+            else if ((package.Data[(int)offset.NIB_A_OFFSET] & UT60EDefinition.NIB_A_KILO) != 0)
+                scale += 3;
+            else if ((package.Data[(int)offset.NIB_B_OFFSET] & UT60EDefinition.NIB_B_MEGA) != 0)
+                scale += 6;
+        }
         int ConvertDigitsToInteger(byte[] digits)
         {
             int result = 0;
@@ -91,37 +100,24 @@ namespace UT60EDL2014
             }
             return result;
         }
-
-        public UT60EDataBase Parse()
+        public IUT60EData Parse()
         {
-            if ((package.data[(int)offset.NIB_C_OFFSET] & UT60EDefinition.NIB_C_FARAD) != 0)
-                data = new UT60ETemperatrue(0);
-            else if ((package.data[(int)offset.NIB_C_OFFSET] & UT60EDefinition.NIB_C_OHM) != 0)
-                data = new UT60EResistance();
-            else if ((package.data[(int)offset.NIB_D_OFFSET] & UT60EDefinition.NIB_D_AMP) != 0)
-                data = new UT60ECurrent();
-            else if ((package.data[(int)offset.NIB_D_OFFSET] & UT60EDefinition.NIB_D_VOLT) != 0)
-                data = new UT60EVoltage();
-            else if ((package.data[(int)offset.NIB_D_OFFSET] & UT60EDefinition.NIB_D_HERTZ) != 0)
-                data = new UT60EFrequnecy();
-            else if ((package.data[(int)offset.NIB_E_OFFSET] & UT60EDefinition.NIB_E_CELCIUS) != 0)
-                data = new UT60ETemperatrue(1);
+            ParseNumber();
+            IUT60EData data;
+            if ((package.Data[(int)offset.NIB_C_OFFSET] & UT60EDefinition.NIB_C_FARAD) != 0)
+                data = new UT60ETemperatrueF(package.Time, value, scale);
+            else if ((package.Data[(int)offset.NIB_C_OFFSET] & UT60EDefinition.NIB_C_OHM) != 0)
+                data = new UT60EResistance(package.Time, value, scale);
+            else if ((package.Data[(int)offset.NIB_D_OFFSET] & UT60EDefinition.NIB_D_AMP) != 0)
+                data = new UT60ECurrent(package.Time, value, scale);
+            else if ((package.Data[(int)offset.NIB_D_OFFSET] & UT60EDefinition.NIB_D_VOLT) != 0)
+                data = new UT60EVoltage(package.Time, value, scale);
+            else if ((package.Data[(int)offset.NIB_D_OFFSET] & UT60EDefinition.NIB_D_HERTZ) != 0)
+                data = new UT60EFrequnecy(package.Time, value, scale);
+            else if ((package.Data[(int)offset.NIB_E_OFFSET] & UT60EDefinition.NIB_E_CELCIUS) != 0)
+                data = new UT60ETemperatrueC(package.Time, value, scale);
             else
                 throw new FormatException();
-            
-            ParseNumber();
-            if ((package.data[(int)offset.NIB_A_OFFSET] & UT60EDefinition.NIB_A_NANO) != 0)
-                data.scale -= 9;
-            else if ((package.data[(int)offset.NIB_A_OFFSET] & UT60EDefinition.NIB_A_MICRO) != 0)
-                data.scale -= 6;
-            else if ((package.data[(int)offset.NIB_B_OFFSET] & UT60EDefinition.NIB_B_MILLI) != 0)
-                data.scale -= 3;
-            else if ((package.data[(int)offset.NIB_A_OFFSET] & UT60EDefinition.NIB_A_KILO) != 0)
-                data.scale += 3;
-            else if ((package.data[(int)offset.NIB_B_OFFSET] & UT60EDefinition.NIB_B_MEGA) != 0)
-                data.scale += 6;
-
-            data.time = package.time_stamp;
             return data;
         }
     }

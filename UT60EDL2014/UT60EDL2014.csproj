@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UT60EDL2014</RootNamespace>
     <AssemblyName>UT60EDL2014</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -31,8 +32,12 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AeroWizard">
+      <HintPath>..\..\library\AeroWizard.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -46,23 +51,44 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CsvFile.cs" />
+    <Compile Include="FilePathTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FilePathTextBox.Designer.cs">
+      <DependentUpon>FilePathTextBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="MDIParent1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MDIParent1.Designer.cs">
       <DependentUpon>MDIParent1.cs</DependentUpon>
     </Compile>
-    <Compile Include="UT60EConfigForm.cs">
+    <Compile Include="OptionDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UT60EConfigForm.Designer.cs">
-      <DependentUpon>UT60EConfigForm.cs</DependentUpon>
+    <Compile Include="OptionDialog.Designer.cs">
+      <DependentUpon>OptionDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="UT60EConfigWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UT60EConfigWizard.Designer.cs">
+      <DependentUpon>UT60EConfigWizard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UT60EDataController.cs" />
+    <Compile Include="UT60EMainController.cs" />
     <Compile Include="UT60EDataLogger.cs" />
-    <Compile Include="UT60EPortDataPackage.cs" />
+    <Compile Include="UT60ELogSettings.cs" />
+    <Compile Include="UT60EMeterDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UT60EMeterDisplay.Designer.cs">
+      <DependentUpon>UT60EMeterDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UT60Packet.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UT60EDataBase.cs" />
+    <Compile Include="UT60EData.cs" />
     <Compile Include="UT60EDataParser.cs" />
     <Compile Include="UT60EDisplayForm.cs">
       <SubType>Form</SubType>
@@ -70,8 +96,17 @@
     <Compile Include="UT60EDisplayForm.Designer.cs">
       <DependentUpon>UT60EDisplayForm.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="FilePathTextBox.resx">
+      <DependentUpon>FilePathTextBox.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MDIParent1.resx">
       <DependentUpon>MDIParent1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="OptionDialog.resx">
+      <DependentUpon>OptionDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UT60EConfigWizard.resx">
+      <DependentUpon>UT60EConfigWizard.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -83,11 +118,11 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="UT60EConfigForm.resx">
-      <DependentUpon>UT60EConfigForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UT60EDisplayForm.resx">
       <DependentUpon>UT60EDisplayForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UT60EMeterDisplay.resx">
+      <DependentUpon>UT60EMeterDisplay.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
